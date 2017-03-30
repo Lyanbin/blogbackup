@@ -96,15 +96,17 @@ class App extends React.Component {
         this.change = this.change.bind(this);
     }
     change () {
+        // change后，组件本身会重新执行render进行渲染
         this.setState({
             name: 'lyb01'
         });
     }
     render () {
         return (
-			<div>
-	            {this.state.name}
-            <button onClick={this.change}>change</button>
+            <div>
+                {this.state.name}
+                // 注意这里如果需要传参，请使用诸如data-Arg或者其他自定义属性进行传参，否则拿不到
+                <button onClick={this.change}>change</button>
 	        </div>
         );
     }
