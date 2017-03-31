@@ -92,7 +92,7 @@ class App extends React.Component {
         this.state = {
         	name: 'lyb'
         }
-		// 在构造函数中，需要将自有的方法绑定到当前的this中去
+        // 在构造函数中，需要将自有的方法绑定到当前的this中去
         this.change = this.change.bind(this);
     }
     change () {
@@ -101,10 +101,10 @@ class App extends React.Component {
             name: 'lyb01'
         });
     }
+    // jsx可以嵌入js表达式，但是需要用花括号包起来。需要注意的是，js的表达式为变量名、函数定义表达式 、属性访问表达式、函数调用表达式、算数表达式、关系表达式、逻辑表达式。但是，if和for循环这类不是js表达式，不可以直接写入jsx
     render () {
         return (
             <div>
-                {/* jsx可以嵌入js表达式，但是需要用花括号包起来。需要注意的是，js的表达式为变量名、函数定义表达式 、属性访问表达式、函数调用表达式、算数表达式、关系表达式、逻辑表达式。但是，if和for循环这类不是js表达式，不可以直接写入jsx */}
                 {this.state.name}
                 {/* jsx的注释，需要同样需要使用花括号包起来 */}
                 <button onClick={this.change}>change</button>
