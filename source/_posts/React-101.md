@@ -104,8 +104,9 @@ class App extends React.Component {
     render () {
         return (
             <div>
+                {/* jsx可以嵌入js表达式，但是需要用花括号包起来。需要注意的是，js的表达式为变量名、函数定义表达式 、属性访问表达式、函数调用表达式、算数表达式、关系表达式、逻辑表达式。但是，if和for循环这类不是js表达式，不可以直接写入jsx */}
                 {this.state.name}
-                // 注意这里如果需要传参，请使用诸如data-Arg或者其他自定义属性进行传参，否则拿不到
+                {/* jsx的注释，需要同样需要使用花括号包起来 */}
                 <button onClick={this.change}>change</button>
 	        </div>
         );
