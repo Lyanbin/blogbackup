@@ -117,3 +117,23 @@ ReactDOM.render(
 	<App />, document.getElementById('app')
 );
 ```
+
+
+## 三、生命周期钩子
+
+React每个组件，都具有三个状态，分别为
+* Mount 挂载组件
+* Update 正在被重新渲染
+* Unmount 销毁组件
+
+```javascript
+componentDidMount () {
+    // 该函数会在组件挂载成功后调用
+}
+
+ComponentWillUnmount () {
+    // 该函数会在组件销毁前进行执行
+}
+
+
+```
