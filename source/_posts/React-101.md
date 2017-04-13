@@ -117,7 +117,9 @@ ReactDOM.render(
 	<App />, document.getElementById('app')
 );
 ```
-
+需要注意的是，代码中，不能直接的对this.state进行修改。在js中，对象和数组都是引用传递，当调用setState进行更新状态时候，不允许对前一个状态进行直接修改。
+通用的做法，是利用Object.assign({}, this.state, next.state)，得到一个state的浅拷贝，来进行状态更新。
+但是，Object.assign也只能对一层的json进行拷贝。对于更深的数据嵌套，可以借助于immutable.js进行处理。
 
 ## 三、生命周期钩子
 
@@ -126,6 +128,7 @@ React每个组件，都具有三个状态，分别为
 * Update 正在被重新渲染
 * Unmount 销毁组件
 
+其中，常用的有
 ```javascript
 componentDidMount () {
     // 该函数会在组件挂载成功后调用
