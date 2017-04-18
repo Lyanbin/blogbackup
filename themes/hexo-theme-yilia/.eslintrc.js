@@ -34,6 +34,7 @@ module.exports = {
       'code': 120
     }],
     'consistent-return': 0,
-    'comma-dangle': 0
+    'comma-dangle': 0,
+    'indent': ["error", 4]
   }
 }
