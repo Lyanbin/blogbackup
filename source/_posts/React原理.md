@@ -124,9 +124,8 @@ const Feact = {
     }
     
     render(element, container) {
-        /*
-            之前的render不能接收用户自定义的组件，这里待会儿修改
-        */
+        // 之前的render不能接收用户自定义的组件，这里待会儿修改
+        
     }
     
 };
@@ -178,7 +177,7 @@ class FeactCompositeComponentWrapper {
 const MyMessage = Feact.createClass({
     render() {
         if (this.props.asTitle) {
-            retrun Feact.createElement(Mytitle, {
+            return Feact.createElement(Mytitle, {
                 message: this.props.message
             });
         } else {
