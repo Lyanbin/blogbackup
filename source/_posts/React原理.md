@@ -7,7 +7,7 @@ tags: [JavaScript, React]
 
 ### React是声明式的
 在React中，写一个组件，通常会这么写
-```js
+``` javascript
 class Mycomponent extends React.Component {
     render () {
         return <div>hello</div>
@@ -15,7 +15,7 @@ class Mycomponent extends React.Component {
 }
 ```
 其中，return的内容，会被编译为
-```js
+``` javascript
 class Mycomponent extends React.Component {
     render () {
         return React.createElement('div', null, 'hello');
@@ -33,13 +33,13 @@ class Mycomponent extends React.Component {
 
 首先，要实现React，我们分解问题来看，就是要实现一个
 
-```js
+``` javascript
 Feact.render(<h1>hello world</h1>, document.getElementById('root'));
 
 ```
 简单了解React就会知道，render()方法的第一个参数，是jsx语法，这里暂时不考虑jsx的编译，问题继续被降级，那么就是要实现一个
 
-```js
+``` javascript
 Feact.render(
     Feact.createElement('h1', null, 'hello world'),
     document.getElementById('root')
@@ -48,7 +48,7 @@ Feact.render(
 ```
 也就是说，Feact对象中，目前必须得有2个方法，一个是createElement(), 一个是render()。其中，createElement()方法返回一个普通的json对象，来描述dom。所以，目前，我们的Feact对象应该张这个样子
 
-```js
+``` javascript
 const Feact = {
    createElement(type, props, children) {
        const element = {
@@ -71,7 +71,7 @@ const Feact = {
 
 那么render函数，从上面可以得知，render()接收两个参数，一个是描述dom的对象，一个是被插入的位置。也就是说render()应该长的像这样子
 
-```js
+``` javascript
 render(element, container) {
     const componentInstance = new FeactDomComponent(element);
     return componentInstance.mountComponent(container);
@@ -79,7 +79,7 @@ render(element, container) {
 ```
 其中，FeactDomComponent对象用来生成dom，然后调用该对象中的mountComponent方法来实现挂载。所以FeactDomComponent对象至少应该是这个样子
 
-```js
+``` javascript
 class FeactDomComponent {
     /* element 即为描述dom的json对象 */
     constructor(element) {
@@ -106,7 +106,7 @@ class FeactDomComponent {
 
 以上得到的仅仅是一个写死的组件，下面加入用户可配置功能。所以，Feact需要添加一个createClass()方法。
 
-```js
+``` javascript
 const Feact = {
 
     createElement() {
@@ -145,7 +145,7 @@ Feact.render({
 
 现在，可以Feact可以接收自定义的组件了。就差改写render()方法了。但是，目前来看，render()方法利用FeactDomComponent对象仅仅处理原生的dom。需要进行改造，添加一个FeactCompositeComponentWrapper来包裹FeactDomComponent对象
 
-```js
+``` javascript
 render(element, container) {
     const componentInstance = new FeactCompositeComponentWrapper(element);
     return componentInstance.mountComponent(container);
@@ -173,7 +173,7 @@ class FeactCompositeComponentWrapper {
 
 到目前为止，Feact已经能处理一些用户自定义的组件以及原生组件，但是在render()方法中，假如存在一些业务逻辑的话，目前还不能胜任，比如一个组件如下所示：
 
-```js
+``` javascript
 const MyMessage = Feact.createClass({
     render() {
         if (this.props.asTitle) {
@@ -189,7 +189,7 @@ const MyMessage = Feact.createClass({
 
 这样的话，我们必须在FeactCompositeComponentWrapper中的mountComponent方法里，做一些简单的逻辑判断。那么，FeactCompositeComponentWrapper改写为：
 
-```js
+``` javascript
 class FeactCompositeComponentWrapper {
     constructor(element) {
         this._currentELement = element;
@@ -216,7 +216,7 @@ class FeactCompositeComponentWrapper {
 
 工厂函数很简单，如下所示
 
-```js
+``` javascript
 const TopLevelWrapper = function (props) {
     this.props = props;
 }
