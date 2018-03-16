@@ -6,7 +6,7 @@ tags: [JavaScript, React]
 
 
 ### React是声明式的
-在React中，写一个组件，通常会这么写
+在`React`中，写一个组件，通常会这么写
 ``` javascript
 class Mycomponent extends React.Component {
     render () {
@@ -14,7 +14,7 @@ class Mycomponent extends React.Component {
     }
 }
 ```
-其中，return的内容，会被编译为
+其中，`return`的内容，会被编译为
 ``` javascript
 class Mycomponent extends React.Component {
     render () {
@@ -22,22 +22,22 @@ class Mycomponent extends React.Component {
     }
 }
 ```
-在某种意义上说，我们是通过调用了React.createElement来创建
-一个组件。但是，事实上我们仅仅是声明了这个组件，然后React帮助我们实例化了这个组件对象，并调用render()来创建了这个组件。我们仅仅需要描述我们需要什么，剩下的全部由React渲染页面。
+在某种意义上说，我们是通过调用了`React.createElement`来创建
+一个组件。但是，事实上我们仅仅是声明了这个组件，然后`React`帮助我们实例化了这个组件对象，并调用`render()`来创建了这个组件。我们仅仅需要描述我们需要什么，剩下的全部由`React`渲染页面。
 
 
 <!-- more -->
 
 ### React的渲染基础渲染原理
-接下来，靠着这个思想，来创建一个假的React，这里暂且叫它为Feact吧。
+接下来，靠着这个思想，来创建一个假的`React`，这里暂且叫它为`Feact`吧。
 
-首先，要实现React，我们分解问题来看，就是要实现一个
+首先，要实现`React`，我们分解问题来看，就是要实现一个
 
 ``` javascript
 Feact.render(<h1>hello world</h1>, document.getElementById('root'));
 
 ```
-简单了解React就会知道，render()方法的第一个参数，是jsx语法，这里暂时不考虑jsx的编译，问题继续被降级，那么就是要实现一个
+简单了解`React`就会知道，`render()`方法的第一个参数，是`jsx`语法，这里暂时不考虑`jsx`的编译，问题继续被降级，那么就是要实现一个
 
 ``` javascript
 Feact.render(
@@ -46,7 +46,7 @@ Feact.render(
 );
 
 ```
-也就是说，Feact对象中，目前必须得有2个方法，一个是createElement(), 一个是render()。其中，createElement()方法返回一个普通的json对象，来描述dom。所以，目前，我们的Feact对象应该张这个样子
+也就是说，`Feact`对象中，目前必须得有2个方法，一个是`createElement()`, 一个是`render()`。其中，`createElement()`方法返回一个普通的`json`对象，来描述`dom`。所以，目前，我们的`Feact`对象应该张这个样子
 
 ``` javascript
 const Feact = {
@@ -69,7 +69,7 @@ const Feact = {
 
 ```
 
-那么render函数，从上面可以得知，render()接收两个参数，一个是描述dom的对象，一个是被插入的位置。也就是说render()应该长的像这样子
+那么`render`函数，从上面可以得知，`render()`接收两个参数，一个是描述`dom`的对象，一个是被插入的位置。也就是说`render()`应该长的像这样子
 
 ``` javascript
 render(element, container) {
@@ -77,7 +77,7 @@ render(element, container) {
     return componentInstance.mountComponent(container);
 }
 ```
-其中，FeactDomComponent对象用来生成dom，然后调用该对象中的mountComponent方法来实现挂载。所以FeactDomComponent对象至少应该是这个样子
+其中，`FeactDomComponent`对象用来生成`dom`，然后调用该对象中的`mountComponent`方法来实现挂载。所以`FeactDomComponent`对象至少应该是这个样子
 
 ``` javascript
 class FeactDomComponent {
@@ -100,11 +100,11 @@ class FeactDomComponent {
 }
 ```
 
-给以上代码组装下，一个最基本的Feact就组件完成了。
+给以上代码组装下，一个最基本的`Feact`就组件完成了。
 
 ### 用户自定义组件
 
-以上得到的仅仅是一个写死的组件，下面加入用户可配置功能。所以，Feact需要添加一个createClass()方法。
+以上得到的仅仅是一个写死的组件，下面加入用户可配置功能。所以，`Feact`需要添加一个`createClass()`方法。
 
 ``` javascript
 const Feact = {
@@ -143,7 +143,7 @@ Feact.render({
 
 ```
 
-现在，可以Feact可以接收自定义的组件了。就差改写render()方法了。但是，目前来看，render()方法利用FeactDomComponent对象仅仅处理原生的dom。需要进行改造，添加一个FeactCompositeComponentWrapper来包裹FeactDomComponent对象
+现在，可以`Feact`可以接收自定义的组件了。就差改写`render()`方法了。但是，目前来看，`render()`方法利用`FeactDomComponent`对象仅仅处理原生的`dom`。需要进行改造，添加一个`FeactCompositeComponentWrapper`来包裹`FeactDomComponent`对象
 
 ``` javascript
 render(element, container) {
@@ -171,7 +171,7 @@ class FeactCompositeComponentWrapper {
 
 ```
 
-到目前为止，Feact已经能处理一些用户自定义的组件以及原生组件，但是在render()方法中，假如存在自定义组件嵌套的话，目前还不能胜任，比如一个组件如下所示，MyMessage嵌套了Mytitle：
+到目前为止，`Feact`已经能处理一些用户自定义的组件以及原生组件，但是在`render()`方法中，假如存在自定义组件嵌套的话，目前还不能胜任，比如一个组件如下所示，`MyMessage`嵌套了`Mytitle`：
 
 ``` javascript
 const MyMessage = Feact.createClass({
@@ -187,7 +187,7 @@ const MyMessage = Feact.createClass({
 });
 ```
 
-这样的话，我们必须在FeactCompositeComponentWrapper中的mountComponent方法里，做一些简单的逻辑判断。那么，FeactCompositeComponentWrapper改写为：
+这样的话，我们必须在`FeactCompositeComponentWrapper`中的`mountComponent`方法里，做一些简单的逻辑判断。那么，`FeactCompositeComponentWrapper`改写为：
 
 ``` javascript
 class FeactCompositeComponentWrapper {
@@ -211,8 +211,8 @@ class FeactCompositeComponentWrapper {
 
 ```
 
-目前来看，Feact已经更加完善了，但是目前的生命周期还有问题，后续再解决。
-另外，在Feact.render()执行的时候，无论组件是自定义组件还是原生的dom，我们发现他们终归会执行到FeactDOMComponent，所以这里为了统一处理，我们可以给所有的组件包裹一个工厂函数，让他成为自定义组件，方便我们后续处理。
+目前来看，`Feact`已经更加完善了，但是目前的生命周期还有问题，后续再解决。
+另外，在`Feact.render()`执行的时候，无论组件是自定义组件还是原生的`dom`，我们发现他们终归会执行到`FeactDOMComponent`，所以这里为了统一处理，我们可以给所有的组件包裹一个工厂函数，让他成为自定义组件，方便我们后续处理。
 
 工厂函数很简单，如下所示
 

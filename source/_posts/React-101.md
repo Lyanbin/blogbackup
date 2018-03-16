@@ -5,7 +5,7 @@ tags: [JavaScript, React]
 ---
 
 
-临走前坑一把，体验一把React。本篇即为新手入门的101。
+临走前坑一把，体验一把`React`。本篇即为新手入门的101。
 
 <!-- more -->
 
@@ -55,7 +55,7 @@ const MyComponent = () => (
 ReactDOM.render(<MyComponent />, document.getElementById('app'));
 ```
 
-为了提高组件的健壮性，通常会对传入的props进行验证。
+为了提高组件的健壮性，通常会对传入的`props`进行验证。
 ```javascript
 
 // PropTypes 验证，若传入的 props type 不符合将会显示错误
@@ -73,7 +73,7 @@ App.defaultProps = {
 
 ## 二、props和state
 
-props为父元素向下传递数据的方式
+`props`为父元素向下传递数据的方式
 
 ```javascript
 // 这里输出 Hello，lyb
@@ -82,8 +82,8 @@ const MyComponent = () => (
 );
 ReactDOM.render(<MyComponent name="lyb"/>, document.getElementById('app'));
 ```
-state为当前组件的状态，可以通过setState({name: 'lyb01'})这样的方式来更新组件内容
-以下代码，会在按钮点击后，将lyb改变为lyb01
+state为当前组件的状态，可以通过`setState({name: 'lyb01'})`这样的方式来更新组件内容
+以下代码，会在按钮点击后，将`lyb`改变为`lyb01`
 
 ```javascript
 class App extends React.Component {
@@ -117,16 +117,16 @@ ReactDOM.render(
 	<App />, document.getElementById('app')
 );
 ```
-需要注意的是，代码中，不能直接的对this.state进行修改。在js中，对象和数组都是引用传递，当调用setState进行更新状态时候，不允许对前一个状态进行直接修改。
-通用的做法，是利用Object.assign({}, this.state, next.state)，得到一个state的浅拷贝，来进行状态更新。
-但是，Object.assign也只能对一层的json进行拷贝。对于更深的数据嵌套，可以借助于immutable.js进行处理。
+需要注意的是，代码中，不能直接的对`this.state`进行修改。在js中，对象和数组都是引用传递，当调用`setState`进行更新状态时候，不允许对前一个状态进行直接修改。
+通用的做法，是利用`Object.assign({}, this.state, next.state)`，得到一个`state`的拷贝，来进行状态更新。
+但是，`Object.assign`也只能对一层的`json`进行拷贝。对于更深的数据嵌套，可以借助于`immutable.js`进行处理。
 
 ## 三、生命周期钩子
 
-React每个组件，都具有三个状态，分别为
-* Mount 挂载组件
-* Update 正在被重新渲染
-* Unmount 销毁组件
+`React`每个组件，都具有三个状态，分别为
+* `Mount` 挂载组件
+* `Update` 正在被重新渲染
+* `Unmount` 销毁组件
 
 其中，常用的有
 ```javascript

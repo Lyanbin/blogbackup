@@ -5,7 +5,7 @@ tags: [css, flex]
 ---
 
 
-父级元素设置display为flex或者inline-flex时，表示该元素将以弹性盒子方式布局。同时，该元素上的float、clear、vertical-align将全部失效。
+父级元素设置`display`为`flex`或者`inline-flex`时，表示该元素将以弹性盒子方式布局。同时，该元素上的`float`、`clear`、`vertical-align`将全部失效。
 
 ```css
 .box {
@@ -14,11 +14,11 @@ tags: [css, flex]
 ```
 
 #### 基本概念：
-* flex容器: 设置display为flex的父级元素为flex容器
-* flex项目: 容器中所有的子元素，为容器的flex项目，即flex item
-* 主轴(main asix): flex项目的填充方向，默认为水平方向；主轴的起始位置(flex容器边框的交叉点)为main start，结束位置为main end
-* 交叉轴(cross asix): 与主轴垂直交叉的轴，叫交叉轴 ；交叉轴的起始位置为cross start，结束位置为cross end
-* 主轴空间: flex项目占据的主轴空间为main size；占据的交叉轴空间为cross size
+* `flex`容器: 设置`display`为`flex`的父级元素为`flex`容器
+* `flex`项目: 容器中所有的子元素，为容器的`flex`项目，即`flex item`
+* 主轴(`main asix`): `flex`项目的填充方向，默认为水平方向；主轴的起始位置(`flex`容器边框的交叉点)为`main start`，结束位置为`main end`
+* 交叉轴(`cross asix`): 与主轴垂直交叉的轴，叫交叉轴 ；交叉轴的起始位置为`cross start`，结束位置为`cross end`
+* 主轴空间: `flex`项目占据的主轴空间为`main size`；占据的交叉轴空间为`cross size`
 
 
 #### flex容器接收的属性：
