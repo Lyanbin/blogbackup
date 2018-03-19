@@ -180,3 +180,96 @@ class FeactDOMComponent {
 `receiveComponent()`只是调用了`updateComponent()`，而`updateComponent()`则最终调用了`_updateDOMProperties()`和`_updateDOMChildren()`，这2个函数最终，完成了真实`dom`的更新。需要注意的是，`_updateDOMProperties()`更多的关注了`CSS`相关的内容。简便期间，我们暂时不考虑它，仅仅指出，在`React`中，这个函数是用来解决样式的更新的。
 
 `_updateDOMChildren()`在`React`中，那可是相当的复杂，主要是解决了各种不同的场景下的执行情况。但是，在`Feact`中，为了方便理解，我们只考虑子节点是文本的情况，也就是上文中所写的，我们从`hello`，更新到了`hello again`。
+
+``` javascript
+class FeactDOMComponent {
+
+    // 其他都一样
+    _updateDOMChildren(lastProps, nextProps) {
+        const lastContent = lastProps.children;
+        const nextContent = nextProps.children;
+
+        if (!nextContent) {
+            this.updateTextContent('');
+        } else if (lastContent !== nextContent) {
+            this.updateTextContent('' + nextContent);
+        }
+    }
+
+    _updateTextContent(text) {
+        const node = this._hostNode;
+
+        const firstChild = node.firstChild;
+
+        if (firstChild && firstChild === node.lastChild && firstChild.nodeType ===3) {
+            firstChild.nodeValue = text;
+            return;
+        }
+
+        node.textContent = text;
+    }
+}
+```
+
+从上面可以看出，`Feact`的`_updateDOMChildren`非常屌丝，但是大概原理就是这样。
+
+
+### 更新自定义组件
+
+上面这些内容，我们实现了`FeactDOMComponent`的更新，但是下面这种情况就无能为力了。
+
+``` javascript
+
+Feact.render(
+    Feact.createElement(MyCoolComponent, {myProp: 'hello'}),
+    document.getElementById('root');
+);
+
+setTimeout(() => {
+    Feact.render(
+        Feact.createElement(MyCoolComponent, {myProp: 'hello again'}),
+        document.getElementById('root');
+    );
+}, 2000);
+
+```
+
+更新自定义组件就有趣多了，这也是`React`的牛逼之处。有一个好消息，自定义组件的更新，归根结底会降级到原生组件的更新，所以上面我们做的工作，都是有效的，没有浪费。
+
+还有个更好的消息，`updateRootComponent`在执行的时候，并不关心组件是自定义的组件，还是原生的组件。他只是调用`receiveComponent`，所以，我们需要做的，只是给`FeactCompositeComponentWrapper`也增加一个`receiveComponent`就好啦。
+
+``` javascript
+
+class FeactCompositeComponentWrapper {
+
+    // 其他都一样
+    receiveComponent(nextElement) {
+        const prevElement = this._currentElement;
+        this.updateComponent(prevElement, nextElement);
+    }
+
+    updateComponent(prevComponent, nextElement) {
+        const nextProps = nextElement.props;
+
+        this._performComponentUpdate(nextElement, nextProps);
+    }
+
+    _performComponentUpdate(nextElement, nextProps) {
+        this._currentELement = nextElement;
+        const inst = this._instance;
+
+        inst.props = nextProps;
+
+        this._updateRenderedComponent();
+    }
+
+    _updateRenderedComponent() {
+        const prevComponentInstance = this._renderedComponent;
+        const inst = this._instance;
+        const nextRenderedElement = inst.render();
+
+        prevComponentInstance.receiveComponent(nextRenderedElement);
+    }
+}
+
+```
