@@ -107,6 +107,10 @@ class FeactCompositeComponentWrapper {
     performInitialMount(container) {
         const renderedElement = this._instance.render();
         const child = instantiateFeactComponent(renderedElement);
+
+        // 这一行暂时没用，以后将负责关于更新相关的操作
+        this._renderedComponent = child;
+        
         return FeactReconciler.mountComponent(child, container);        
     }
 }
