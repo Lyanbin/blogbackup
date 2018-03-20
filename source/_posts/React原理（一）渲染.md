@@ -94,6 +94,9 @@ class FeactDomComponent {
         
         container.appendChild(domElement);
         
+        // 这里暂时没啥用，后面更新的时候会用到
+        this._hostNode = domElement;
+        
         return domElement;
     }
     

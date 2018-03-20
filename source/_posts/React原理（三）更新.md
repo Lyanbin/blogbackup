@@ -21,6 +21,10 @@ setTimeout(() => {
 
 本篇中，我们暂时忽略`setState()`，先通过`Feact.render()`来实现更新。说实话，这就是最屌丝的『`props`改变，所以更新』的模型，即如果你又`render`了，并且传入了不同的`props`给子组件，那么就更新呗。
 
+
+<!-- more -->
+
+
 ### 开始
 
 理念非常简单，`Feact.render()`只需检查，之前是否渲染过，如果渲染过，就执行`update`。结构如下所示
@@ -273,3 +277,126 @@ class FeactCompositeComponentWrapper {
 }
 
 ```
+
+这里有点点复杂，但是也解决了很多问题，而且，`React`中，基本跟我们写的一样，一样的在`ReactCompositeComponentWrapper`有上面我们写的4个函数。
+
+最终，这些一系列复杂的更新操作，都会降级到去`render`一系列的`props`，然后，把得到的结果传递给`_renderedComponent`进行更新。`_renderedComponent`会变成下一个`FeactCompositeComponentWrapper`或者`FeactDOMComponent`。
+
+### 使用协调器
+
+挂载组件当然要通过我们之前所写的`FeactReconciler`，虽然这个操作对于`Feact`没什么意义，但是我们还是保持和`React`一致。
+
+``` javascript
+
+const FeactReconciler = {
+
+    // 其他都一样
+
+    receiveComponent(internalInstance, nextElement) {
+        internalInstance.receiveComponent(nextElement);
+    }
+}
+
+function updateRootComponentprevComponent, nextElement) {
+    FeactReconciler.receiveComponent(prevComponent, nextElement);
+}
+
+class FeactCompositeComponentWrapper {
+
+    // 其他都一样
+
+    _updateRenderedComponent() {
+        const prevComponentInstance = this._renderedComponent;
+        const inst = this._instance;
+        const nextRenderedElement = inst.render();
+
+        FeactReconciler.receiveComponent(
+            prevComponentInstance,
+            nextRenderedElement
+        );
+    }
+
+}
+
+```
+
+### 生命周期`shouldComponentUpdate`和`componentWillReceiveProps`
+
+
+``` javascript
+
+    class FeactCompompositeComponentWrapper {
+
+        // 其他都一样
+
+        updateComponent(prevElement, nextElement) {
+            const nextProps = nextElement.props;
+            const inst = this._instance;
+
+            if (inst.componentWillReceiveProps) {
+                inst.componentWillReceiveProps(nextProps);
+            }
+
+            let shouldUpdate = inst.shouldComponentUpdate(nextProps);
+
+            if (shouldUpdate) {
+                this._performComponentUpdate(nextElement, nextProps);
+            } else {
+                // 即使不更新，也要更新下最新的props
+                inst.props = nextProps;
+            }
+        }
+    }
+
+```
+
+### 还有个大坑
+
+到目前为止，还有个很大的问题不知你们发现了没，那就是现在所有的更新，都是假设更新的时候，都是使用了相同的组件，也就是说，下面这种情况我们可以更新
+
+``` javascript
+Feact.render({
+    Feact.createElement(MyCoolComponent, {myProp: 'hi'}),
+    root
+});
+
+setTimeout(() => {
+    Feact.render(
+        Feact.createElement(MyCoolComponent, { myProp: 'hi again' }),
+        root
+    );
+}, 2000)
+
+```
+
+但是，下面这种情况更新不了
+
+``` javascript
+Feact.render(
+    Feact.createElement(MyCoolComponent, {myProp: 'hi'}),
+    root
+);
+
+setTimeout(() => {
+    Feact.render(
+        Feact.createElement(SomeOtherComponent, {someOtherProp: 'hmmm' }),
+        root
+    );
+}, 2000)
+
+```
+
+这个例子中，我们传入了一个全新的组件，`Feact`非常弱智的继续渲染原来的`MyCoolComponent`，然后把他的`props`更新为`{someOtherProp: 'hmmm' }`。
+
+正确的做法是告诉它，组件的`type`已经改变了，不应该再去更新，应该卸载掉`MyCoolComponent`，然后挂载`SomeOtherComponent`。
+
+想实现这些，`Feact`必须做到以下2点：
+* 具有卸载组件的能力（`unmount`）
+* 通知组件的`type`已经改变，然后让`FeactReconciler`执行`FeactReconciler.mountComponent`，而不是去去执行`FeactComponent.receiveComponent`
+
+> 在`React`中，如果你又一次渲染了相同的组件，那么它会更新。这时候，你不需要定义一个`key`给你的组件。`key`仅仅在需要渲染成吨的`children`的时候，是必要的。如果你忘记了给渲染的子组件增加`key`，`React`会给你一堆警告，你最好留意这些警告，因为如果没这些`key`的话，`React`在需要更新的时候执行的不是更新，而是卸载掉原来的组件，然后挂载新的。
+
+### 现在知道什么是虚拟`DOM`了么
+
+在`React`刚出来的时候，各种吹所谓的`虚拟DOM`，但是我觉得`虚拟DOM`并不是真的需要关心的。他仅仅是一些概念而已。真正需要关注的，是`prevElement`和`nextElement`，他们一起捕获了每次渲染不同的地方，然后`FeactDOMComponent`将这些不同的地方挂载到了真实的`DOM`上。
+
