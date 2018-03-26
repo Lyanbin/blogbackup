@@ -242,4 +242,158 @@ class FeactCompositeComponentWrapper {
 
 ```
 
-组件的更新跟之前很像，不同的是，我们增加了`state`的赋值操作。因为`state`仅仅挂载在公共实例上，`_performComponentUpdate`只改变了一行，`_updateRenderedComponent`一行没变。真正改变的重点是`updateComponent`中，我们合并`state`的操作。
+组件的更新跟之前很像，不同的是，我们增加了`state`的赋值操作。因为`state`仅仅挂载在公共实例上，`_performComponentUpdate`只改变了一行，`_updateRenderedComponent`一行没变。真正改变的重点就是在`updateComponent`中，我们合并`state`的操作。
+
+
+至此，`setState`的功能，已经基本完成啦！
+
+但是，上面的`setState`的实现，比较屌丝，性能也比较糟糕。主要的问题是，每次调用`setState`都会导致组件的渲染。这将迫使用户，要么好好想想怎么组装数据然后只使用一次`setState`，要么就接受这种每次调用就渲染的问题。接下来，我们要做的就是改造它，使它最好能自适应的具有批量工作的能力，从而减少渲染的次数。
+
+### 批量调用`setState`
+
+仔细观察生命周期函数的调用，不难发现，每次的渲染，都调用了`componentWillReceiveProps`。如果用户在`componentWillReceiveProps`中调用`setState`会发生什么？在当前的代码中，这将会导致在第一次渲染过程中又一次新的渲染，而对`state`改版而造成的`props`的响应，画面太美不敢看。所以，我们最好将一系列的`state`和`props`的改变，都塞到同一次渲染中。
+
+#### 首先我们需要给需要批量的操作保存起来
+
+首先想到的就是改造`_pendingPartialState`，让它成为一个数组。
+
+``` javascript
+function FeactComponent() {
+
+}
+FeactComponent.prototype.setState = function (partialState) {
+    const internalInstance = FeactInstanceMap.get(this);
+
+    internalInstance._pendingPartialState = internalInstance._pendingPartialState || [];
+
+    internalInstance._pendingPartialState.push(partialState);
+
+    // 其他都一样
+}
+```
+
+而在`updateComponent`中，调用我们将要设计的合并`state`方法。
+
+``` javascript
+class FeactCompositeComponentWrapper {
+    // 其他都一样
+
+    updateComponent(prevElement, nextElement) {
+        // 其他都一样
+        const nextState = this._processPendingState();
+        // 其他都一样
+    }
+
+    _processPendingState() {
+        const inst = this._instance;
+        if (!this._pendingPartialState) {
+            return inst.state;
+        }
+
+        let nextState = inst.state;
+
+        for (let i = 0; i < this._pendingPartialState.length; ++i) {
+            nextState = Object.assign(nextState, this._pendingPartialState[i]);
+        }
+
+        this._pendingPartialState = null;
+
+        return nextState;
+    }
+}
+
+```
+#### 其次将批量合并之后的`state`塞到一次渲染过程中
+
+> 注意这里的批量操作原理是非常简单的，并不是`React`中的全部功能。我们主要指出批量操作的原理。
+
+在`Feact`中，我们只在页面还在渲染的时候，批量合并`state`，其他时候，我们并不做这样的处理。所以，在`updateComponent`过程中，我们会做一个标记，告诉外面，我们正在渲染，在渲染结束之后，讲其设置为`false`。如果`setState`看到了这个标记为`true`，他会挂起这个`state`，但不渲染它。因为它知道，当当前的渲染结束的时候，渲染引擎会重拾这个`state`进行下一次渲染。
+
+``` javascript
+class FeactCompositeComponent {
+
+    // 其他都一样
+
+    updateComponent(prevElement, nextElement) {
+        this._rendering = true;
+        // 中间这一部分跟之前一样
+        this._rendering = false;
+    };
+
+}
+
+function FeactComponent() {
+
+}
+
+FeactComponent.prototype.setState = function (partialState) {
+    const internalInstance = FeactInstanceMap.get(this);
+
+    internalInstance._pendingPartialState = internalInstance._pendingPartialState || [];
+
+    internalInstance.push(partialState);
+
+    if (!internalInstance._rendering) {
+        FeactReconciler.performUpdateIfNecessary(internalInstance);
+    }
+
+}
+```
+
+基本上完成啦。
+
+
+### `setState`陷阱
+
+现在，我们已经明白了`setState`的工作原理以及批量工作的概念，但是这里有几个关于`setState`的陷阱需要注意。我们知道，当我们利用`state`去更新组件的时候，有好几个步骤，每个步骤中，被挂起的`state`需要一个一个的处理，也就是说，当我们在`setState`中使用`this.state`是非常危险的
+
+``` javascritp
+componentWillReceiveProps(nextProps) {
+    this.setState({ counter: this.state.counter + 1 });
+    this.setState({ counter: this.state.counter + 1 });
+}
+```
+
+这个例子中，我们期待执行2次加法运算。但是，`state`会被批量处理，所以第二次`setState`和第一次的`setState`有相同的输入，所以，加法运算只会执行一次。
+
+`React`中，解决这个问题的方法是传入一个回调函数
+
+``` javascript
+componentWillReceiveProps(nextProps) {
+    this.setState((currentState) => ({
+        counter: currentState.counter + 1
+    });
+    this.setState((currentState) => ({
+        counter: currentState.counter + 1
+    });
+}
+```
+
+当传入回调函数的时候，我们将会得到正确的结果，我们将这个特性运用到`Feact`中去
+
+``` javascript
+_processPendingState() {
+    const inst = this._instance;
+    if (!this._pendingPartialState) {
+        return inst.state;
+    }
+
+    let nextState = inst.state;
+
+    for (let i = 0; i < this._pendingPartialState.length; ++i) {
+        const partialState = this._pendingPartialState[i];
+
+        if (typeof partialState === 'function') {
+            nextState = partialState(nextState);
+        } else {
+            nextState = Object.assign(nextState, patialState);
+        }
+    }
+
+    this._pendingPartialState = null;
+    return nextState;
+}
+
+```
+
+至此，大功告成啦！
