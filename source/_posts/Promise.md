@@ -367,4 +367,99 @@ MyPromise.prototype.then = function (onFulfilled, onRejected) {
     }
 }
 ```
-到目前为止，看似都很美好。但是如果`onFulfilled`返回的`x`是一个新的`MyPromise`呢？
+到目前为止，看似都很美好。但是如果`onFulfilled`返回的`x`是一个新的`MyPromise`呢？所以，在`Promise2`中，不能简单的`resolve`这个`promise2`。我们这里定义个函数，用来专门处理`x`的值。
+```js
+// 这里传入4个参数，x为promise2的onFulfilled或者onRejected的值，resolve和reject就是promise2的2个实参，至于为啥传递个`promise2`进来，后面我们慢慢完善，就发现他的作用了，这里暂时不管。
+function resolvePromise(promise2, x, resolve, reject) {
+    if (x instanceof MyPromise) {
+        // 如果x是promise的实例，则需要分类讨论是否pending
+        if (x.status === 'pending') {
+            // 如果promise仍然是pending，则注册这个promise的回调函数，继续递归，直到返回值不是pending的promise为止
+            x.then(value => {
+                resolvePromise(promise2, value, resolve, reject);
+            }, reject);
+        } else {
+            // 如果promise以及被决断，则肯定有个resolve或者reject的值，直接调用then，拿到promise的最终值即可
+            x.then(resolve, reject);
+        }
+    } else {
+        // 如果x不是promise，直接resolve，降级为上面的x值非promise的情况
+        resolve(x);
+    }
+}
+```
+这个函数是整个`MyPromise`中最抽象的地方。我们先分类讨论它的情况。
+- 如果`x`的值不是`MyPromise`的实例，问题降级为上面`x`非`promise`的情况。
+- 如果`x`的值是`MyPromise`的实例，但是状态已经被`fulfilled`或者`rejected`，则`x`肯定有一个最终的`value`，我们只需继续`x.then(reolve, reject)`，拿到`x`这个`MyPromise`的最终值即可。
+- 如果`x`的值是`MyPromise`的实例，但是状态仍然是`pending`，我们同样需要调用`then`函数（`promise`每一步只能去`then`），去注册这个`x`的回调函数（再次啰嗦，`x`是`MyPromise`实例），继续递归，直到返回值不是`pending`状态的`MyPromise`为止。
+
+至此，我们的`MyPromise`基本可用了，贴一下`then`方法此时的样子
+```js
+MyPromise.prototype.then = function (onFulfilled, onRejected) {
+    let self = this;
+    let promise2;
+
+    if (self.status === 'fulfilled') {
+        return promise2 = new MyPromise(function (resolve, reject) {
+            try {
+               let x = onFulfilled(self.data);
+               // 替换
+               resolvePromise(promise2, x, resolve, reject); 
+            } catch (e) {
+                reject(e);
+            }
+        });
+    } else if (self.status === 'rejected') {
+        return promise2 = new MyPromise(function (resolve, reject) {
+            try {
+                let x = onRejected(self.data);
+                // 替换
+                resolvePromise(promise2, x, resolve, reject); 
+            } catch (e) {
+                reject(e)
+            }
+        });
+    } else if (self.status === 'pending') {
+        return promise2 = new MyPromise(function (resolve, reject) {
+            // 如果是`pending`状态，则一样只需给当前的数组压入回调即可
+            self.onFulfilledCallbacks.push((value) => {
+                try {
+                    let x = onFulfilled(value);
+                    // 替换
+                    resolvePromise(promise2, x, resolve, reject); 
+                } catch (e) {
+                    reject(e);
+                }
+            });
+            self.onRejectedCallbacks.push((reason) => {
+                try {
+                    let x = onRejected(reason);
+                    // 替换
+                    resolvePromise(promise2, x, resolve, reject); 
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+    }
+}
+```
+
+组装完成后，配合下面的demo，可以查看
+
+```js
+let p = new MyPromise(function (resolve, reject) {
+    resolve(100);
+});
+p.then(function (data) {
+    return new MyPromise((resolve, reject) => {
+        setTimeout(() => {
+            resolve(data + 100);
+        }, 2000);
+    });
+}).then(function (data) {
+    console.log(data);
+});
+```
+
+基本的`Promise`以及实现了，但是仍然有很多细节，我们慢慢补充。
