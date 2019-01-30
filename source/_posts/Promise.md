@@ -19,6 +19,8 @@ p.then(function (data) {
     console.log(data);
 });
 ```
+
+<!-- more -->
 可以清楚的感知到，我们传入了个函数，这个函数会在内部执行。同时，`then`方法会注册一个回调，该回调在`resolve`后进行执行，并且拿到`resolve`的传参。那么，我们的`promise`可以简单定义为：
 ```js
 function MyPromise(executor) {
@@ -202,7 +204,7 @@ p.then(function (data) {
 ```
 
 ## 四、链式操作
-目前来看，只能使用一个`then`，要想使用`promise.then(func1).then(func2).then(func3)`这种操作，还需要对回调函数的注册进行一番改造。操作起来非常简单，只需在全局注册2个数组用来存放回调函数，在`pending`时push，在`resolve`时遍历回调数组，并挨个调用即可。
+目前来看，只能使用一个`then`，要想使用`promise.then(func1).then(func2).then(func3)`这种操作，还需要对回调函数的注册进行一番改造。操作起来非常简单，只需在全局注册2个数组用来存放回调函数，在`pending`时push，在`resolve`时遍历回调数组，并挨个调用即可。这里需要谨记，在函数主体（后面简称`main`）执行的时候，`then`接收的参数，理论上应该是一个函数，如果不是函数，后续我们的`MyPromise`会做一些容错处理。`main`执行到`then`，会将`then`内的参数（函数）挂起，到下一轮事件循环时候再去执行。对这里不太清楚的小伙伴可以了解下`microtask`和`macrotask`。
 ```js
 function MyPromise(executor) {
 
